@@ -1,0 +1,11 @@
+{
+  "name": "tech-docs",
+  "version": "1.0.0",
+  "description": "记录平台级组件的技术文档",
+  "scripts": {
+    "start": "docsify serve"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
