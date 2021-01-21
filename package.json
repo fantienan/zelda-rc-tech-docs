@@ -4,7 +4,7 @@
   "description": "记录平台级组件的技术文档",
   "scripts": {
     "install": "npm i docsify-cli -g",
-    "start": "docsify serve"
+    "start": "docsify serve --port 4321"
   },
   "keywords": [],
   "author": "",

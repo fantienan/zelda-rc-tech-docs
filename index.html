@@ -9,6 +9,21 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, minimum-scale=1.0"
     />
+    <style>
+      .docsify-pagination-container .pagination-item a {
+        display: flex;
+        align-items: center;
+      }
+      .docsify-pagination-container .pagination-item .pagination-item-title {
+        font-size: inherit;
+      }
+      .pagination-item.pagination-item--next .pagination-item-label {
+        order: 2;
+      }
+      .pagination-item.pagination-item--next .pagination-item-title {
+        order: 1;
+      }
+    </style>
     <link rel="stylesheet" href="asset/vue.css" />
     <!-- <link rel="stylesheet" href="asset/theme-simple-dark.css" /> -->
   </head>
