@@ -19,7 +19,7 @@
 
 #### 项目中使用 react components、forestar provider：
 
->	react 根节点注入 forestar provider，这样在其他页面才能拿到 forestar 实例们。
+> react 根节点注入 forestar provider，这样在其他页面才能拿到 forestar 实例们。
 
 ```tsx
 import ReactDOM from "react-dom";
@@ -39,10 +39,11 @@ ReactDOM.render(
 
 ```tsx
 import React, { useContext } from "react";
+// 平台组件库
 import { Map, Compartment, ForestarContext } from "zelda-rc";
 
 const Example: React.FC = () => {
-  // 拿到地图实例和工具实例
+  // 拿到地图实例和工具实例们
   const context = useContext(ForestarContext);
   return (
     <div>
@@ -61,23 +62,21 @@ const Example: React.FC = () => {
 import { ForestarContext } from "zelda-rc"
 
 export const store = new Store({
-	forestarMap: new ForestarMap(),
-	distLocation: new DistLocation(),
-	pointQuery: new PointQuery()
+  forestarMap: new ForestarMap()
+  ...
 })
 const Map: React.FC<IMap> = (props) => {
   ...
-	const context = useContext(ForestarContext);
-	// 地图初始化
+  const context = useContext(ForestarContext);
+  // 地图初始化
   const init = () => {...};
   useEffect(() => {
-		init();
-		// 向forestar provider挂载实例
+    init();
+    // 向forestar provider挂载实例
     context.setForestarMap(store.forestarMap);
-    context.setDistLocation(store.distLocation);
-    context.setPointQuery(store.pointQuery);
+    ...
   }, []);
- 	...
+  ...
   return ...
 };
 export default Map
@@ -91,10 +90,13 @@ import { ForestarContext } from "zelda-rc"
 const Compartment: FC<ICompartment> = (props) => {
 	...
 	const context = useContext(ForestarContext)
-	...
+  ...
+  const drawFinishHandler = () => {
+	}
 	useEffect(() => {
 		...
-		context.setAddTool()
+		// 初始化addTool实例并注册回调事件
+		context.setTool().useDrawFinishHandler(drawFinishHandler)
 	}, [])
 	...
 	return ...
@@ -121,48 +123,47 @@ export interface IStore {
   setDistLocation(value: IDistLocation): void;
   setPointQuery(value: IPointQuery): void;
 }
-
+const DRWA_FINISH_EVENT_NAME = "drawFinishHandler"
 class Store implements IStore {
-  addTool?: any = undefined;
+  private register: Map<string, (params: any) => void> = new Map()
   forestarMap: IStore["forestarMap"] = undefined;
-  distLocation: IStore["distLocation"] = undefined;
-  pointQuery: IStore["pointQuery"] = undefined;
+  addTool?: any = undefined;
+  ...
   // 挂载工具实例
-  setAddTool() {
-		// 利用微任务队列处理初始化时实例挂载顺序
-    let runner = new Promise((resolve) => {
-      const chain = Promise.resolve();
-      chain.then(() => {
-        this.addTool = new AddTool({
-          option: {
-            drawFinishHandler: this.drawFinishHandler.bind(this),
-          },
-          map: this.forestarMap,
-        });
-      });
-      resolve(true);
-    });
-    runner.then(() => console.log("初始化addTool完毕"));
+  setTool() {
+    // 利用微任务队列处理初始化时实例挂载顺序
+    let runner = new Promise(resolve => {
+        const chain = Promise.resolve()
+        chain.then(this.setAddTool.bind(this))
+        ...
+        resolve(true)
+    })
+    runner.then(() => console.log("初始化addTool完毕"))
+    return this
   }
   // 挂载地图实例
   setForestarMap(value: IForestarMap) {
     this.forestarMap = value;
   }
-  // 挂载distLocation实例
-  setDistLocation(value: IDistLocation) {
-    this.distLocation = value;
+  ...
+  private setAddTool() {
+    this.addTool = new AddTool({
+      option: {
+        drawFinishHandler: this.drawFinishHandler.bind(this),
+      },
+      map: this.forestarMap
+    })
+    return this
   }
-  // 挂载点查实例
-  setPointQuery(value: IPointQuery) {
-    this.pointQuery = value;
-  }
-
   // 区划绘图完毕的回调
-  private drawFinishHandler(params: {
-    feature: Feature<Geometry>;
-    area: any;
-    toolType: string;
-  }) {}
+  private drawFinishHandler(params: IDrawFinishParams) {
+    const cb = this.register.get(DRWA_FINISH_EVENT_NAME)
+    typeof cb === "function" && cb(params as IDrawFinishParams)
+  }
+  useDrawFinishHandler(cb: () => void) {
+    this.register.set(DRWA_FINISH_EVENT_NAME, cb)
+  }
+  ...
 }
 
 const store = new Store();
